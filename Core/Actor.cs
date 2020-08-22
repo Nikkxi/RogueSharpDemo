@@ -4,12 +4,20 @@ using RogueSharpDemo.Interfaces;
 
 namespace RogueSharpDemo.Core
 {
-    public class Actor : IActor, IDrawable
+    public class Actor : IActor, IDrawable, ISchedulable
     {
         public RLColor _Color { get; set; }
         public char _Symbol { get; set; }
         public int X { get; set; }
         public int Y { get; set; }
+        public int Time
+        {
+            get
+            {
+                return Speed;
+            }
+            
+        }
 
         private int _Attack;
         private int _AttackChance;

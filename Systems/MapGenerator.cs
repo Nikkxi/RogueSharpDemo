@@ -2,6 +2,7 @@
 using RogueSharp.DiceNotation;
 using RogueSharpDemo.Core;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace RogueSharpDemo.Systems
@@ -73,6 +74,11 @@ namespace RogueSharpDemo.Systems
                 }
             }
 
+            foreach(Rectangle room in _map.rooms)
+            {
+                CreateDoors(room);
+            }
+
             PlacePlayer();
             PlaceMonsters();
 
@@ -88,6 +94,67 @@ namespace RogueSharpDemo.Systems
                     _map.SetCellProperties(x, y, true, true, false);
                 }
             }
+        }
+
+        private void CreateDoors(Rectangle room)
+        {
+            int minX = room.Left;
+            int maxX = room.Right;
+            int minY = room.Top;
+            int maxY = room.Bottom;
+
+            List<ICell> borderCells = _map.GetCellsAlongLine(minX, minY, maxX, minY).ToList();
+            borderCells.AddRange(_map.GetCellsAlongLine(minX, maxY, maxX, maxY));
+            borderCells.AddRange(_map.GetCellsAlongLine(minX, minY, minX, maxY));
+            borderCells.AddRange(_map.GetCellsAlongLine(maxX, minY, maxX, maxY));
+
+            foreach(ICell cell in borderCells)
+            {
+                if (IsPotentialDoor(cell))
+                {
+                    _map.SetCellProperties(cell.X, cell.Y, false, true);
+                    _map.doors.Add(new Door
+                    {
+                        X = cell.X,
+                        Y = cell.Y,
+                        IsOpen = false
+                    });
+                }
+            }
+        }
+
+        private bool IsPotentialDoor(ICell cell)
+        {
+            if (!cell.IsWalkable)
+            {
+                return false;
+            }
+
+            ICell left = _map.GetCell(cell.X - 1, cell.Y);
+            ICell right = _map.GetCell(cell.X + 1, cell.Y);
+            ICell top = _map.GetCell(cell.X, cell.Y - 1);
+            ICell bottom = _map.GetCell(cell.X, cell.Y + 1);
+
+            if(_map.GetDoor(cell.X, cell.Y) != null ||
+                _map.GetDoor(left.X, left.Y) != null ||
+                _map.GetDoor(right.X, right.Y) != null ||
+                _map.GetDoor(top.X, top.Y) != null ||
+                _map.GetDoor(bottom.X, bottom.Y) != null)
+            {
+                return false;
+            }
+
+            if(left.IsWalkable && right.IsWalkable && !top.IsWalkable && !bottom.IsWalkable)
+            {
+                return true;
+            }
+
+            if (top.IsWalkable && bottom.IsWalkable && !left.IsWalkable && !right.IsWalkable)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private void CreateHorizontalTunnel(int xStart, int xEnd, int yPos)

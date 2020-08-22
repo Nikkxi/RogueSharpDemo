@@ -9,11 +9,14 @@ namespace RogueSharpDemo.Core
     {
 
         public List<Rectangle> rooms;
+        public List<Door> doors { get; set; }
+
         private readonly List<Monster> _monsters;
 
         public DungeonMap()
         {
             rooms = new List<Rectangle>();
+            doors = new List<Door>();
             _monsters = new List<Monster>();
         }
         
@@ -22,6 +25,11 @@ namespace RogueSharpDemo.Core
             foreach(Cell Cx in GetAllCells())
             {
                 SetConsoleSymbolForCell(MapConsole, Cx);
+            }
+
+            foreach(Door d in doors)
+            {
+                d.Draw(MapConsole, this);
             }
 
             int i = 0;
@@ -89,6 +97,7 @@ namespace RogueSharpDemo.Core
             if (GetCell(x, y).IsWalkable)
             {
                 SetIsWalkable(actor.X, actor.Y, true);
+                OpenDoor(actor, x, y);
 
                 actor.X = x;
                 actor.Y = y;
@@ -115,18 +124,21 @@ namespace RogueSharpDemo.Core
             Game._Player = player;
             SetIsWalkable(player.X, player.Y, false);
             UpdatePlayerFieldOfView();
+            Game._Scheduler.Add(player);
         }
 
         public void AddMonster(Monster monster)
         {
             _monsters.Add(monster);
             SetIsWalkable(monster.X, monster.Y, false);
+            Game._Scheduler.Add(monster);
         }
 
         public void RemoveMonster(Monster monster)
         {
             _monsters.Remove(monster);
             SetIsWalkable(monster.X, monster.Y, true);
+            Game._Scheduler.Remove(monster);
         }
         public Monster GetMonsterAt(int x, int y)
         {
@@ -163,6 +175,23 @@ namespace RogueSharpDemo.Core
                 }
             }
             return false;
+        }
+
+        public Door GetDoor(int x, int y)
+        {
+            return doors.SingleOrDefault(d => d.X == x && d.Y == y);
+        }
+
+        private void OpenDoor(Actor actor, int x, int y)
+        {
+            Door door = GetDoor(x, y);
+            if(door!=null && !door.IsOpen)
+            {
+                door.IsOpen = true;
+                var cell = GetCell(x, y);
+                SetCellProperties(x, y, true, cell.IsWalkable, cell.IsExplored);
+                Game._MessageLog.Add($"{actor.Name} opened a door.");
+            }
         }
 
     }

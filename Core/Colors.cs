@@ -21,5 +21,10 @@ namespace RogueSharpDemo.Core
         public static RLColor Player = Palette.DbLight;
 
         public static RLColor Kobold = Palette.DbBrightWood;
+
+        public static RLColor DoorBackground = Palette.ComplimentDarkest;
+        public static RLColor Door = Palette.ComplimentLighter;
+        public static RLColor DoorBackgroundFoV = Palette.ComplimentDarker;
+        public static RLColor DoorFoV = Palette.ComplimentLightest;
     }
 }

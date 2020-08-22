@@ -1,11 +1,53 @@
-﻿using RogueSharp.DiceNotation;
+﻿using RogueSharp;
+using RogueSharp.DiceNotation;
 using RogueSharpDemo.Core;
+using RogueSharpDemo.Interfaces;
 using System.Text;
 
 namespace RogueSharpDemo.Systems
 {
-    class CommandSystem
+    public class CommandSystem
     {
+        public bool IsPlayerTurn { get; set; }
+
+        public void EndPlayerTurn()
+        {
+            IsPlayerTurn = false;
+        }
+
+        public void ActivateMonsters()
+        {
+            ISchedulable schedulable = Game._Scheduler.Get();
+            if(schedulable is Player)
+            {
+                IsPlayerTurn = true;
+                Game._Scheduler.Add(Game._Player);
+            }
+            else
+            {
+                Monster monster = schedulable as Monster;
+
+                if(monster != null)
+                {
+                    monster.PerformAction(this);
+                    Game._Scheduler.Add(monster);
+                }
+
+                ActivateMonsters();
+            }
+        }
+
+        public void MoveMonster(Monster monster, ICell cell)
+        {
+            if (!Game._Map.SetActorPosition(monster, cell.X, cell.Y))
+            {
+                if(Game._Player.X == cell.X && Game._Player.Y == cell.Y)
+                {
+                    Attack(monster, Game._Player);
+                }
+            }
+        }
+
         public bool MovePlayer(Direction direction)
         {
             int x = Game._Player.X;

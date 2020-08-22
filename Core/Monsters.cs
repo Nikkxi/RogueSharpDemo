@@ -1,5 +1,6 @@
 ﻿using RLNET;
 using RogueSharp.DiceNotation;
+using RogueSharpDemo.Systems;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,6 +9,9 @@ namespace RogueSharpDemo.Core
 {
     public class Monster : Actor
     {
+        public int? TurnsAlerted { get; set; }
+
+
         public void DrawMonsterStats(RLConsole console, int pos)
         {
             int yPos = 13 + (pos * 2);
@@ -21,6 +25,12 @@ namespace RogueSharpDemo.Core
             console.SetBackColor(3 + width, yPos, remainingWidth, 1, Palette.PrimaryDarkest);
 
             console.Print(2, yPos, $": {Name}", Palette.DbLight);
+        }
+
+        public virtual void PerformAction(CommandSystem commandSystem)
+        {
+            var behavior = new StandardMoveAndAttack();
+            behavior.Act(this, commandSystem);
         }
     }
 

@@ -45,6 +45,8 @@ namespace RogueSharpDemo
 
         public static MessageLog _MessageLog { get; private set; }
 
+        public static SchedulingSystem _Scheduler { get; private set; }
+
         static void Main(string[] args)
         {
             // SETUP
@@ -77,14 +79,17 @@ namespace RogueSharpDemo
             _MessageLog.Add($"Level created with seed '{seed}'");
 
 
+            // Set Up Scheduling System
+            _Scheduler = new SchedulingSystem();
+
+            // Set Up Command System
+            _CommandSystem = new CommandSystem();
+
             // Create Actors & Map
             //_Player = new Player();
             MapGenerator MapGen = new MapGenerator(_MapWidth, _MapHeight, 20, 13, 7);
             _Map = MapGen.GenerateMap();
             _Map.UpdatePlayerFieldOfView();
-
-            // Set Up Command System
-            _CommandSystem = new CommandSystem();
 
 
             // UPDATE, RENDER, AND RUN
@@ -99,32 +104,41 @@ namespace RogueSharpDemo
             bool DidPlayerAct = false;
             RLKeyPress keyPress = _rootConsole.Keyboard.GetKeyPress();
 
-            if (keyPress != null)
+            if (_CommandSystem.IsPlayerTurn)
             {
-                if(keyPress.Key == RLKey.Up)
+                if (keyPress != null)
                 {
-                    DidPlayerAct = _CommandSystem.MovePlayer(Direction.Up);
+                    if (keyPress.Key == RLKey.Up)
+                    {
+                        DidPlayerAct = _CommandSystem.MovePlayer(Direction.Up);
+                    }
+                    else if (keyPress.Key == RLKey.Down)
+                    {
+                        DidPlayerAct = _CommandSystem.MovePlayer(Direction.Down);
+                    }
+                    else if (keyPress.Key == RLKey.Left)
+                    {
+                        DidPlayerAct = _CommandSystem.MovePlayer(Direction.Left);
+                    }
+                    else if (keyPress.Key == RLKey.Right)
+                    {
+                        DidPlayerAct = _CommandSystem.MovePlayer(Direction.Right);
+                    }
+                    else if (keyPress.Key == RLKey.Escape)
+                    {
+                        _rootConsole.Close();
+                    }
                 }
-                else if(keyPress.Key == RLKey.Down)
+
+                if (DidPlayerAct)
                 {
-                    DidPlayerAct = _CommandSystem.MovePlayer(Direction.Down);
-                }
-                else if (keyPress.Key == RLKey.Left)
-                {
-                    DidPlayerAct = _CommandSystem.MovePlayer(Direction.Left);
-                }
-                else if (keyPress.Key == RLKey.Right)
-                {
-                    DidPlayerAct = _CommandSystem.MovePlayer(Direction.Right);
-                }
-                else if (keyPress.Key == RLKey.Escape)
-                {
-                    _rootConsole.Close();
+                    _RenderRequired = true;
+                    _CommandSystem.EndPlayerTurn();
                 }
             }
-
-            if (DidPlayerAct)
+            else
             {
+                _CommandSystem.ActivateMonsters();
                 _RenderRequired = true;
             }
         }
